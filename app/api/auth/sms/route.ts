@@ -1,22 +1,16 @@
 import { NextResponse } from 'next/server';
-import { sendSMS } from '@/lib/aligo';
+import { sendSMS } from '@/lib/solapi';
+import { saveCode } from '@/lib/verifyStore';
 
 export async function POST(req: Request) {
+  const { phone } = await req.json();
+  const code = Math.floor(100000 + Math.random() * 900).toString(); //3자리인증번호
+
   try {
-    const { phone, code } = await req.json();
-
-    if (!phone || !code) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid input' },
-        { status: 400 }
-      );
-    }
-
     await sendSMS(phone, code);
-
+    saveCode(phone, code);
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error('문자 전송 실패:', err);
+  } catch (err) {
     return NextResponse.json(
       { success: false, error: err.message },
       { status: 500 }
